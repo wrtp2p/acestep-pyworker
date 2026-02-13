@@ -121,10 +121,9 @@ stopasgroup=true
 killasgroup=true
 stopsignal=TERM
 stopwaitsecs=10
-stdout_logfile=/workspace/pyworker.log
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
 redirect_stderr=true
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=2
 SUPERVISOR
 
 cat > /opt/supervisor-scripts/pyworker-serverless.sh << SCRIPT
