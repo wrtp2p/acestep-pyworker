@@ -24,15 +24,16 @@ stopasgroup=true
 killasgroup=true
 stopsignal=TERM
 stopwaitsecs=10
-stdout_logfile=/var/log/ace-step-api.log
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
 redirect_stderr=true
-stdout_events_enabled=true
-stdout_logfile_maxbytes=50MB
-stdout_logfile_backups=2
 SUPERVISOR
 
 cat > /opt/supervisor-scripts/ace-step-api-serverless.sh << 'SCRIPT'
 #!/bin/bash
+# Output to both stdout (for vastai logs) and log file (for pyworker to tail)
+exec > >(tee -a /var/log/ace-step-api.log) 2>&1
+
 . /opt/supervisor-scripts/utils/environment.sh
 . /venv/main/bin/activate
 
@@ -42,7 +43,9 @@ while [ -f "/.provisioning" ]; do
 done
 
 echo "Starting ACE Step API (serverless mode)"
-cd "${WORKSPACE}/ACE-Step-1.5"
+echo "Workspace: ${WORKSPACE}"
+ls -la "${WORKSPACE}/ACE-Step-1.5/" 2>&1 | head -5 || echo "ERROR: ${WORKSPACE}/ACE-Step-1.5 not found!"
+cd "${WORKSPACE}/ACE-Step-1.5" || { echo "FATAL: Cannot cd to ${WORKSPACE}/ACE-Step-1.5"; exit 1; }
 UV_PROJECT_ENVIRONMENT=/venv/main uv run acestep-api --port 8001
 SCRIPT
 chmod +x /opt/supervisor-scripts/ace-step-api-serverless.sh
